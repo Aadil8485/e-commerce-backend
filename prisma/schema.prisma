@@ -1,0 +1,96 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+
+
+
+
+
+
+generator client {
+  provider = "prisma-client-js"
+  
+}
+
+datasource db {
+  provider = "mysql"
+
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?  
+  price       Float
+  stock       Int      @default(0)
+  // 🔥 Yeh nayi line add karni hai (default dummy image ke sath)
+  image       String   @default("https://via.placeholder.com/300")
+  createdAt   DateTime @default(now())
+}
+
+// Home page ke top banner/slider ke liye
+model HeroSlider {
+  id        Int      @id @default(autoincrement())
+  title     String
+  imageUrl  String
+  linkUrl   String?  // Banner par click karne se kahan jayega (optional)
+  isActive  Boolean  @default(true) // Agar kisi banner ko temporarily band karna ho
+  createdAt DateTime @default(now())
+}
+
+// Auto Slider (Featured Products) ke liye alag table
+model AutoSlider {
+  id          Int      @id @default(autoincrement())
+  productId   Int?     // <-- Yeh nayi line add karni hai (Asli product ki ID ke liye)
+  name        String
+  price       Float
+  imageUrl    String
+  rating      Float?   @default(0.0)
+  reviewCount Int?     @default(0)
+  badge       String?  
+  isActive    Boolean  @default(true) 
+  createdAt   DateTime @default(now())
+}
+
+// prisma/schema.prisma (Sabse neeche add karein)
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  orders    Order[]  // 🔥 Bas yeh nayi line add karni hai User model me!
+  // 🔥 Nayi line add ki: Default role "USER" hoga
+  role      String   @default("USER")
+}
+
+// 🔥 Naya Order Table
+model Order {
+  id          Int         @id @default(autoincrement())
+  userId      Int
+  user        User        @relation(fields: [userId], references: [id]) // User se connect kiya
+  totalPrice  Int         // Total bill amount
+  status      String      @default("PENDING") // PENDING, PAID, ya DELIVERED
+  // 🔥 YEH NAYI LINE ADD KAREIN (Question mark ? zaroori hai)
+  address     String?
+  createdAt   DateTime    @default(now())
+  items       OrderItem[] // Is order me kya-kya items hain
+}
+
+// 🔥 Order ke andar ke items ka Table
+model OrderItem {
+  id          Int      @id @default(autoincrement())
+  orderId     Int
+  order       Order    @relation(fields: [orderId], references: [id]) // Order se connect kiya
+  productId   Int      // Product ki ID
+  productName String   // Product ka naam
+  price       Int      // Product ka price
+  quantity    Int      // Kitne piece kharide
+}
+
